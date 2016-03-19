@@ -13,7 +13,7 @@ var cheerio = require('cheerio');
 // Target to spider
 var opt = {
     hostname: 'localhost',
-    path: '/doubam.html',
+    path: '/douban.html',
     port: 3000
 };
 
@@ -42,7 +42,7 @@ http.get(opt, function(res) {
             movies.push(movie);
         });
 
-        console.log(movie);
+        console.log(movies);
     });
 }).on('error', function(err) {
     console.log(err);
