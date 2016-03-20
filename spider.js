@@ -5,80 +5,87 @@
 'use strict';
 
 // Import modules
-var http = require('http');
 var fs = require('fs');
 var path = require('path');
+var express = require('express');
 var cheerio = require('cheerio');
+var superagent = require('superagent');
 
-// Target to spider
-var opt = {
-    hostname: 'localhost',
-    path: '/douban.html',
-    port: 3000
-};
+var app = express();
 
-http.get(opt, function(res) {
-    var html ='';
-    var movies = [];
+app.get('/', function (req, res, next) {
+    superagent.get('https://movie.douban.com/chart')
+        .end(function(err, sres) {
 
-    res.setEncoding('utf-8');
+            if(err) {
+                return console.log(err);
+            }
 
-    res.on('data', function(chunk) {
-        html += chunk;
+            var movies = [];
+            var $ = cheerio.load(sres.text);
+
+            $('.item').each(function() {
+                var picUrl = $('img', this).attr('src');
+                var movie = {
+                    title: $('a', this).attr('title'),
+                    star: $('.rating_nums', this).text(),
+                    link: $('a', this).attr('href'),
+                    picUrl: /^http/.test(picUrl)? picUrl : 'http://localhost:3000/' + picUrl
+                };
+
+                movies.push(movie);
+
+                // Download images
+                downloadImg('img/', movie.picUrl);
+            });
+
+            // Save all datas in data/data.json
+            saveData('data/data.json', movies);
+
+            // Shown json results on html page
+            res.send(movies);
     });
-
-    res.on('end', function() {
-        var $ = cheerio.load(html);
-
-        $('.item').each(function() {
-            var picUrl = $('.pic img', this).attr('src');
-            var movie = {
-                title: $('.title', this).text(),
-                star: $('.info .star em', this).text(),
-                link: $('a', this).attr('href'),
-                picUrl: /^http/.test(picUrl)? picUrl : 'http://localhost:3000/' + picUrl
-            };
-
-            movies.push(movie);
-            downloadImg('img/', movie.picUrl);
-        });
-
-        saveData('data/data.json', movies);
-    });
-}).on('error', function(err) {
-    console.log(err);
 });
 
-function saveData(path, movies) {
-    fs.writeFile(path, JSON.stringify(movies, null, 4), function(err) {
+app.listen(3000, function () {
+    console.log('app is listening at port 3000');
+});
+
+/**
+ * Save data in json file
+ * @param path
+ * @param movies
+ */
+function saveData(path, data) {
+    fs.writeFile(path, JSON.stringify(data, null, 4), function(err) {
+
         if(err) {
             return console.log(err);
         }
+
         console.log('Data saved');
     });
 }
 
+/**
+ * Download images from given url
+ * @param imgDir
+ * @param url
+ */
 function downloadImg(imgDir, url) {
-    http.get(url, function(res) {
-        var data = '';
+    superagent.get(url)
+        .end(function(err, sres) {
+            var data = '';
 
-        res.setEncoding('binary');
-
-        res.on('data', function(chunk) {
-            data += chunk;
-        });
-
-        res.on('end', function() {
             fs.writeFile(imgDir + path.basename(url), data, 'binary', function (err) {
+
                 if(err) {
                     return console.log(err);
                 }
+
                 console.log('Image downloaded', path.basename(url));
             })
         });
-    }).on('error', function(err) {
-        console.log(err);
-    });
 }
 
 
