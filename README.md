@@ -1,6 +1,6 @@
 # Spider-Nodejs
 
-Simple web spider in node.js. A simple spider to download information/images form this [page](https://movie.douban.com/chart).
+Simple web spider in node.js. A simple spider to catch/download information/images from this [page](https://movie.douban.com/chart).
 
 Modules to use:
 
@@ -10,9 +10,9 @@ Modules to use:
 * cheerio
 * superagent
 
-We could get the results on [http://localhost:3000/](http://localhost:3000/). Also these results will be stored in `data/data.json`. In the meantime, it will download images in `img` folder.
+Results will be shown directly on [http://localhost:3000/](http://localhost:3000/). Also these results will be stored in `data/data.json`. In the meantime, it will also download images in `img` folder.
 
-Form this demo, I leart how to:
+From this demo, I leart how to:
 
 * write files by `fs`
 * server side jquery to parser DOM by `cheerio`
